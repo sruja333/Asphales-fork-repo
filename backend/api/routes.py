@@ -31,7 +31,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class BatchAnalyzeRequest(BaseModel):
-    texts: list[str] = Field(..., min_length=1, max_length=50)
+    texts: list[str] 
 
 
 # ---------- Routes ----------

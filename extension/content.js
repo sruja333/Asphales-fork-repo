@@ -42,6 +42,11 @@ function extractTextBlocks() {
   }
   
   console.log(`✅ Found ${blocks.length} text blocks`);
+
+  blocks.forEach((block, index) => {
+    console.log(`📦 Block ${index + 1}:`, block.text);
+  });
+
   return blocks;
 }
 
@@ -214,6 +219,9 @@ async function scanPage() {
   console.log("📤 Final text length sent:", fullText.length);
 
   try {
+    console.log("📤 FULL TEXT SENT TO API:");
+    console.log(fullText);
+
     const result = await analyzeText(fullText);
 
     if (!result) {
@@ -239,6 +247,10 @@ async function scanPage() {
       });
     } else {
       console.log('✅ No threats detected');
+      chrome.runtime.sendMessage({
+        action: "SCAN_RESULT",
+        data: result
+      });
     }
 
   } catch (err) {
