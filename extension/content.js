@@ -177,42 +177,72 @@ function showTooltip(x, y, risk, explanation) {
 // ============ MAIN SCAN FUNCTION ============
 async function scanPage() {
   if (!isProtectionActive) return;
-  
+
   console.log('🔍 Starting page scan...');
-  
-  // Extract all text from page
+
+  // Clear previous highlights before scanning again
+  clearHighlights();
+
+  // Extract text blocks
   const blocks = extractTextBlocks();
-  
-  if (blocks.length === 0) {
+
+  if (!blocks || blocks.length === 0) {
     console.log('No text found on page');
     return;
   }
-  
-  // Combine all text for single API call
-  const fullText = blocks.map(b => b.text).join('\n\n');
-  
-  // Analyze with AI
-  const result = await analyzeText(fullText);
-  
-  // Highlight threats
-  if (result && result.threats && result.threats.length > 0) {
-    console.log(`⚠️ Found ${result.threats.length} threats!`);
-    
-    result.threats.forEach(threat => {
-      // Find which text block contains this phrase
-      blocks.forEach(block => {
-        if (block.text.toLowerCase().includes(threat.phrase.toLowerCase())) {
-          highlightText(
-            block.node,
-            threat.phrase,
-            threat.risk,
-            threat.explanation
-          );
-        }
+
+  console.log(`📦 Total blocks found: ${blocks.length}`);
+
+  // 🔒 Limit number of blocks (avoid massive pages like Wikipedia)
+  const MAX_BLOCKS = 30;
+  const limitedBlocks = blocks.slice(0, MAX_BLOCKS);
+
+  console.log(`✂️ Using first ${limitedBlocks.length} blocks`);
+
+  // Combine selected blocks
+  let fullText = limitedBlocks.map(b => b.text).join('\n\n');
+
+  console.log("🧮 Text length before trim:", fullText.length);
+
+  // 🔒 Hard limit to stay below backend 5000 max_length
+  const MAX_LENGTH = 4000;
+  if (fullText.length > MAX_LENGTH) {
+    console.log(`✂️ Trimming text from ${fullText.length} to ${MAX_LENGTH}`);
+    fullText = fullText.slice(0, MAX_LENGTH);
+  }
+
+  console.log("📤 Final text length sent:", fullText.length);
+
+  try {
+    const result = await analyzeText(fullText);
+
+    if (!result) {
+      console.log('No result returned from analysis');
+      return;
+    }
+
+    // Highlight threats
+    if (result.threats && result.threats.length > 0) {
+      console.log(`⚠️ Found ${result.threats.length} threats`);
+
+      result.threats.forEach(threat => {
+        limitedBlocks.forEach(block => {
+          if (block.text.toLowerCase().includes(threat.phrase.toLowerCase())) {
+            highlightText(
+              block.node,
+              threat.phrase,
+              threat.risk,
+              threat.explanation || "Suspicious content detected."
+            );
+          }
+        });
       });
-    });
-  } else {
-    console.log('✅ No threats detected');
+    } else {
+      console.log('✅ No threats detected');
+    }
+
+  } catch (err) {
+    console.error("🚨 Scan failed:", err);
   }
 }
 
