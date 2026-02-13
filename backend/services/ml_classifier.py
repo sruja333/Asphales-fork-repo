@@ -1,12 +1,13 @@
-"""Pure-Python ML phishing classifier (multinomial Naive Bayes)."""
+"""Pure-Python TF-IDF + Logistic Regression phishing classifier."""
 
 from __future__ import annotations
 
 import csv
 import json
 import math
+import random
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from utils.logger import setup_logger
@@ -15,15 +16,15 @@ logger = setup_logger("ml_classifier")
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATASET_PATH = BASE_DIR / "data" / "phishing_multilingual_7500.csv"
-MODEL_PATH = BASE_DIR / "models" / "phishing_nb_model.json"
+MODEL_PATH = BASE_DIR / "models" / "phishing_tfidf_logreg_model.json"
 TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 
 
 class MLPhishingClassifier:
-    """Multinomial Naive Bayes over multilingual tokens."""
+    """TF-IDF + logistic regression implemented without external ML libs."""
 
     def __init__(self):
-        self.model_name = "multinomial-naive-bayes-token"
+        self.model_name = "tfidf-logistic-regression"
         self.model: dict = {}
         self._load_or_train()
 
@@ -38,31 +39,86 @@ class MLPhishingClassifier:
     def _tokens(self, text: str) -> list[str]:
         return TOKEN_RE.findall(text.lower())
 
+    def _build_vocab_and_idf(self, docs_tokens: list[list[str]], max_features: int = 9000) -> tuple[dict[str, int], dict[int, float]]:
+        df = Counter()
+        tf_global = Counter()
+        for toks in docs_tokens:
+            tf_global.update(toks)
+            df.update(set(toks))
+
+        top_terms = [term for term, _ in tf_global.most_common(max_features)]
+        vocab = {t: i for i, t in enumerate(top_terms)}
+
+        n_docs = len(docs_tokens)
+        idf: dict[int, float] = {}
+        for term, idx in vocab.items():
+            idf[idx] = math.log((1 + n_docs) / (1 + df[term])) + 1.0
+        return vocab, idf
+
+    def _vectorize(self, toks: list[str], vocab: dict[str, int], idf: dict[int, float]) -> dict[int, float]:
+        counts = Counter(t for t in toks if t in vocab)
+        if not counts:
+            return {}
+        total = sum(counts.values())
+        vec = {}
+        for term, c in counts.items():
+            idx = vocab[term]
+            tf = c / total
+            vec[idx] = tf * idf[idx]
+        norm = math.sqrt(sum(v * v for v in vec.values()))
+        if norm > 0:
+            for k in list(vec.keys()):
+                vec[k] /= norm
+        return vec
+
     def train(self, dataset_path: Path, model_path: Path) -> None:
-        phish_counts: Counter[str] = Counter()
-        safe_counts: Counter[str] = Counter()
-        phish_docs = safe_docs = 0
+        texts: list[str] = []
+        labels: list[int] = []
+        docs_tokens: list[list[str]] = []
 
         with dataset_path.open("r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                toks = self._tokens(row["text"])
-                if int(row["label"]) == 1:
-                    phish_docs += 1
-                    phish_counts.update(toks)
-                else:
-                    safe_docs += 1
-                    safe_counts.update(toks)
+                text = row["text"]
+                label = int(row["label"])
+                toks = self._tokens(text)
+                texts.append(text)
+                labels.append(label)
+                docs_tokens.append(toks)
 
-        vocab = sorted(set(phish_counts) | set(safe_counts))
+        vocab, idf = self._build_vocab_and_idf(docs_tokens)
+        vectors = [self._vectorize(toks, vocab, idf) for toks in docs_tokens]
+
+        weights = defaultdict(float)
+        bias = 0.0
+        lr = 0.35
+        reg = 1e-5
+        epochs = 18
+
+        idxs = list(range(len(vectors)))
+        random.seed(42)
+
+        for _ in range(epochs):
+            random.shuffle(idxs)
+            for i in idxs:
+                x = vectors[i]
+                y = labels[i]
+                z = bias + sum(weights[j] * v for j, v in x.items())
+                p = 1.0 / (1.0 + math.exp(-max(-30, min(30, z))))
+                err = p - y
+
+                for j, v in x.items():
+                    weights[j] -= lr * (err * v + reg * weights[j])
+                bias -= lr * err
+
+            lr *= 0.93
+
         model = {
-            "phish_docs": phish_docs,
-            "safe_docs": safe_docs,
-            "phish_total_tokens": sum(phish_counts.values()),
-            "safe_total_tokens": sum(safe_counts.values()),
-            "vocab_size": len(vocab),
-            "phish_counts": dict(phish_counts),
-            "safe_counts": dict(safe_counts),
+            "model": self.model_name,
+            "vocab": vocab,
+            "idf": {str(k): v for k, v in idf.items()},
+            "weights": {str(k): w for k, w in weights.items()},
+            "bias": bias,
         }
 
         model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -74,28 +130,16 @@ class MLPhishingClassifier:
         if not self.model:
             return {"risk_score": 0, "is_phishing": False, "confidence": 0.0, "model": self.model_name}
 
-        ph_docs = self.model["phish_docs"]
-        sf_docs = self.model["safe_docs"]
-        total_docs = max(1, ph_docs + sf_docs)
+        vocab = self.model["vocab"]
+        idf = {int(k): float(v) for k, v in self.model["idf"].items()}
+        weights = {int(k): float(v) for k, v in self.model["weights"].items()}
+        bias = float(self.model["bias"])
 
-        log_phish = math.log(ph_docs / total_docs)
-        log_safe = math.log(sf_docs / total_docs)
-
-        ph_total = max(1, self.model["phish_total_tokens"])
-        sf_total = max(1, self.model["safe_total_tokens"])
-        vocab_size = max(1, self.model["vocab_size"])
-        ph_counts = self.model["phish_counts"]
-        sf_counts = self.model["safe_counts"]
-
-        for tok in self._tokens(text):
-            p_tok_ph = (ph_counts.get(tok, 0) + 1) / (ph_total + vocab_size)
-            p_tok_sf = (sf_counts.get(tok, 0) + 1) / (sf_total + vocab_size)
-            log_phish += math.log(p_tok_ph)
-            log_safe += math.log(p_tok_sf)
-
-        odds = math.exp(min(60, max(-60, log_phish - log_safe)))
-        prob = odds / (1 + odds)
+        x = self._vectorize(self._tokens(text), vocab, idf)
+        z = bias + sum(weights.get(i, 0.0) * v for i, v in x.items())
+        prob = 1.0 / (1.0 + math.exp(-max(-30, min(30, z))))
         risk = int(round(prob * 100))
+
         return {
             "risk_score": risk,
             "is_phishing": prob >= 0.5,

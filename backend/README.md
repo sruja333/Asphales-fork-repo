@@ -5,7 +5,7 @@ Phishing detection API for Indian multilingual/code-mixed messages using:
 2) **GenAI (Claude)** for contextual explanation/refinement
 
 ## Model stack
-- **ML model:** `Multinomial Naive Bayes (token-level, pure Python)`
+- **ML model:** `TF-IDF + Logistic Regression (pure Python implementation)`
 - **GenAI model:** `claude-sonnet-4-20250514` (optional; needs `ANTHROPIC_API_KEY`)
 - **Method labels in API:** `ml` or `ml+genai`
 
@@ -27,7 +27,7 @@ python scripts/train_ml_model.py
 ```
 
 This trains and saves the model to:
-- `backend/models/phishing_nb_model.json`
+- `backend/models/phishing_tfidf_logreg_model.json`
 
 To regenerate the 7,500 dataset:
 ```bash
