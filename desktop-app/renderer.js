@@ -103,12 +103,13 @@ ipcRenderer.on('analyze-text', async (event, text) => {
   if (!isOn || !text) return;
 
   resultDiv.innerText = "Analyzing...";
+  const API_BASE = process.env.SURAKSHA_API_URL || "http://127.0.0.1:8000";
 
   try {
     const payload = JSON.stringify({ text: text });
     const headers = { "Content-Type": "application/json" };
 
-    let response = await fetch("http://127.0.0.1:8000/analyze", {
+    let response = await fetch(`${API_BASE}/analyze`, {
       method: "POST",
       headers: headers,
       body: payload
@@ -116,7 +117,7 @@ ipcRenderer.on('analyze-text', async (event, text) => {
 
     // Compatibility: some backend variants expose /analyze_text instead of /analyze.
     if (response.status === 404) {
-      response = await fetch("http://127.0.0.1:8000/analyze_text", {
+      response = await fetch(`${API_BASE}/analyze_text`, {
         method: "POST",
         headers: headers,
         body: payload
