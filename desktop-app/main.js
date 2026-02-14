@@ -59,7 +59,9 @@ app.whenReady().then(() => {
 
   // Register shortcut: Ctrl + Shift + X
   globalShortcut.register('CommandOrControl+Shift+X', () => {
-    const selectedText = clipboard.readText();
+    const selectionText = clipboard.readText('selection');
+    const clipboardText = clipboard.readText();
+    const selectedText = selectionText && selectionText.trim() ? selectionText : clipboardText;
     win.webContents.send('analyze-text', selectedText);
   });
 });

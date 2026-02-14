@@ -13,7 +13,9 @@
   "build": {
     "appId": "com.suraksha.desktop",
     "productName": "Suraksha Phishing Guard",
-    "files": ["**/*"],
+    "files": [
+      "**/*"
+    ],
     "directories": {
       "buildResources": "."
     },

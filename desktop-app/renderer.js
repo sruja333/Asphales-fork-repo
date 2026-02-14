@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 
-let isOn = false;
+let isOn = true;
 let isExpanded = false;
 let selectedLanguage = 'en';
 let lastAnalysisData = null;
@@ -97,6 +97,8 @@ const TTS_LANG_MAP = {
 
 const translationCache = new Map();
 let audioPlayer = null;
+let cachedVoices = [];
+let voicesReady = false;
 
 function getTranslateTarget() {
   return TRANSLATE_TARGET_MAP[selectedLanguage] || 'en';
@@ -348,6 +350,21 @@ function pickBestVoice(voices, langCode) {
   return voices.find((voice) => voice.default) || voices[0];
 }
 
+function refreshVoices() {
+  if (!window.speechSynthesis) return [];
+  cachedVoices = window.speechSynthesis.getVoices() || [];
+  voicesReady = true;
+  return cachedVoices;
+}
+
+function hasVoiceForLang(voices, langCode) {
+  if (!voices.length) return false;
+  const normalized = langCode.toLowerCase();
+  if (voices.some((voice) => (voice.lang || '').toLowerCase() === normalized)) return true;
+  const base = normalized.split('-')[0];
+  return voices.some((voice) => (voice.lang || '').toLowerCase().startsWith(base));
+}
+
 function speakWithSystemVoice(text) {
   const synth = window.speechSynthesis;
   if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -359,7 +376,7 @@ function speakWithSystemVoice(text) {
   utterance.pitch = 1;
   utterance.volume = 1;
 
-  const voices = synth.getVoices();
+  const voices = voicesReady ? cachedVoices : refreshVoices();
   const selectedVoice = pickBestVoice(voices, lang);
   if (selectedVoice) {
     utterance.voice = selectedVoice;
@@ -380,6 +397,7 @@ async function tryRemoteTts(text, targetLang) {
     }
 
     audioPlayer = new Audio(url);
+    audioPlayer.crossOrigin = 'anonymous';
     audioPlayer.volume = 1;
     await audioPlayer.play();
     return true;
@@ -393,6 +411,15 @@ async function speakText(text) {
   if (!payload) return;
 
   const target = getTranslateTarget();
+  const systemLang = getSpeechLang();
+  const voices = voicesReady ? cachedVoices : refreshVoices();
+  const hasSystemVoice = hasVoiceForLang(voices, systemLang);
+
+  if (hasSystemVoice) {
+    speakWithSystemVoice(payload);
+    return;
+  }
+
   if (target !== 'en') {
     const played = await tryRemoteTts(payload, target);
     if (played) return;
@@ -426,6 +453,11 @@ function applyTheme(themeMode) {
   const next = themeMode === 'dark' ? 'dark' : 'light';
   body.classList.toggle('dark', next === 'dark');
   localStorage.setItem('suraksha-theme', next);
+}
+
+function syncToggleState() {
+  toggleBtn.innerText = isOn ? 'ON' : 'OFF';
+  toggleBtn.style.background = isOn ? 'green' : 'red';
 }
 
 async function updateThemeButtonText() {
@@ -532,8 +564,7 @@ collapseBtn.addEventListener('click', () => {
 
 toggleBtn.addEventListener('click', () => {
   isOn = !isOn;
-  toggleBtn.innerText = isOn ? 'ON' : 'OFF';
-  toggleBtn.style.background = isOn ? 'green' : 'red';
+  syncToggleState();
 });
 
 speakBtn.addEventListener('click', async () => {
@@ -547,13 +578,19 @@ themeBtn.addEventListener('click', async () => {
 });
 
 ipcRenderer.on('analyze-text', async (event, text) => {
-  if (!isOn || !text) return;
+  if (!isOn) return;
+
+  const payloadText = String(text || '');
+  if (!payloadText.trim()) {
+    resultDiv.innerText = await translateText('No text captured. Select text and press Ctrl+C, then Ctrl+Shift+X.');
+    return;
+  }
 
   resultDiv.innerText = await translateText('Analyzing...');
   const API_BASE = (process.env.SURAKSHA_API_URL || 'https://asphales-fork-repo.onrender.com').replace(/\/$/, '');
 
   try {
-    const payload = JSON.stringify({ text: text });
+    const payload = JSON.stringify({ text: payloadText });
     const headers = { 'Content-Type': 'application/json' };
 
     let response = await fetch(`${API_BASE}/analyze`, {
@@ -588,9 +625,9 @@ window.addEventListener('keydown', (event) => {
 });
 
 if (window.speechSynthesis) {
-  window.speechSynthesis.getVoices();
+  refreshVoices();
   window.speechSynthesis.onvoiceschanged = () => {
-    window.speechSynthesis.getVoices();
+    refreshVoices();
   };
 }
 
