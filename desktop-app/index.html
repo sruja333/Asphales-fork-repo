@@ -2,46 +2,165 @@
 <html>
 <head>
   <style>
+    :root {
+      --panel-bg-1: #f8fafc;
+      --panel-bg-2: #eef2ff;
+      --panel-border: #cfd8ea;
+      --ink-strong: #0f172a;
+      --ink-muted: #475569;
+      --accent: #0b5ed7;
+      --accent-2: #22c55e;
+      --surface: rgba(255, 255, 255, 0.72);
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: transparent;
+    }
+
     body {
-      font-family: Arial;
-      padding: 15px;
-      background: #f4f6f8;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+
+    #launcher {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(2, 6, 23, 0.4);
+      overflow: hidden;
+    }
+
+    #launcher img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(1.05) contrast(1.05);
+    }
+
+    #panel {
+      display: none;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      background:
+        radial-gradient(110% 70% at 100% 0%, rgba(11, 94, 215, 0.15) 0%, rgba(11, 94, 215, 0) 60%),
+        linear-gradient(155deg, var(--panel-bg-1), var(--panel-bg-2));
+      border-radius: 14px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.24);
+    }
+
+    body.expanded #launcher {
+      display: none;
+    }
+
+    body.expanded #panel {
+      display: block;
     }
 
     h3 {
-      margin-top: 0;
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: var(--ink-strong);
+      letter-spacing: 0.2px;
     }
 
-    button {
-      padding: 8px 15px;
-      border-radius: 20px;
-      border: none;
+    #panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #collapse {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #b9c2d5;
+      background: #e5eaf3;
+      color: #334155;
+      font-weight: 700;
       cursor: pointer;
+      line-height: 1;
     }
 
     #toggle {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
       background: red;
       color: white;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
     }
 
     #result {
       margin-top: 15px;
       font-size: 14px;
       min-height: 40px;
+      max-height: 112px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      padding-right: 6px;
+      line-height: 1.35;
+      word-break: break-word;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.42);
+      background: var(--surface);
+      backdrop-filter: blur(1px);
+      color: var(--ink-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    #result strong {
+      color: #0b3a82;
+    }
+
+    #result > div {
+      padding: 2px 0;
+    }
+
+    #hint {
+      font-size: 12px;
+      margin: 8px 0 0;
+      color: var(--ink-muted);
+      border-top: 1px dashed rgba(148, 163, 184, 0.55);
+      padding-top: 8px;
     }
   </style>
 </head>
 <body>
+<button id="launcher" aria-label="Open Asphales">
+  <img src="logo.png" alt="Asphales logo">
+</button>
 
-<h3>Asphales Phishing Guard</h3>
+<div id="panel">
+  <div id="panel-top">
+    <h3>Suraksha Phishing Guard</h3>
+    <button id="collapse" aria-label="Minimize">-</button>
+  </div>
 
-<button id="toggle">OFF</button>
+  <button id="toggle">OFF</button>
 
-<div id="result"></div>
+  <div id="result"></div>
 
-<p style="font-size: 12px;">
-Press Ctrl + Shift + X after selecting text.
-</p>
+  <p id="hint">Press Ctrl + Shift + X after selecting text.</p>
+</div>
 
 <script src="renderer.js"></script>
 </body>

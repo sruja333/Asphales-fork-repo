@@ -15,9 +15,10 @@ from utils.logger import setup_logger
 logger = setup_logger("ml_classifier")
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-DATASET_PATH = BASE_DIR / "data" / "phishing_multilingual_7500.csv"
+DATASET_PATH = BASE_DIR / "data" / "combined_training.csv"
 MODEL_PATH = BASE_DIR / "models" / "phishing_tfidf_logreg_model.json"
 TOKEN_RE = re.compile(r"\w+", re.UNICODE)
+MULTISPACE_RE = re.compile(r"\s+")
 
 
 class MLPhishingClassifier:
@@ -37,26 +38,49 @@ class MLPhishingClassifier:
         self.train(DATASET_PATH, MODEL_PATH)
 
     def _tokens(self, text: str) -> list[str]:
-        return TOKEN_RE.findall(text.lower())
+        return TOKEN_RE.findall(self._normalize(text))
 
-    def _build_vocab_and_idf(self, docs_tokens: list[list[str]], max_features: int = 9000) -> tuple[dict[str, int], dict[int, float]]:
+    def _normalize(self, text: str) -> str:
+        text = (text or "").replace("\x00", " ").lower()
+        return MULTISPACE_RE.sub(" ", text).strip()
+
+    def _word_ngrams(self, tokens: list[str]) -> list[str]:
+        grams = list(tokens)
+        grams.extend(f"{tokens[i]} {tokens[i + 1]}" for i in range(len(tokens) - 1))
+        return grams
+
+    def _char_ngrams(self, text: str, min_n: int = 3, max_n: int = 5) -> list[str]:
+        normalized = self._normalize(text)
+        grams: list[str] = []
+        for n in range(min_n, max_n + 1):
+            grams.extend(normalized[i : i + n] for i in range(max(0, len(normalized) - n + 1)))
+        return grams
+
+    def _features(self, text: str) -> list[str]:
+        tokens = self._tokens(text)
+        return self._word_ngrams(tokens) + self._char_ngrams(text)
+
+    def _build_vocab_and_idf(
+        self, docs_features: list[list[str]], max_features: int = 30000, min_df: int = 2
+    ) -> tuple[dict[str, int], dict[int, float]]:
         df = Counter()
         tf_global = Counter()
-        for toks in docs_tokens:
-            tf_global.update(toks)
-            df.update(set(toks))
+        for feats in docs_features:
+            tf_global.update(feats)
+            df.update(set(feats))
 
-        top_terms = [term for term, _ in tf_global.most_common(max_features)]
+        candidates = [(term, freq) for term, freq in tf_global.items() if df[term] >= min_df]
+        top_terms = [term for term, _ in sorted(candidates, key=lambda x: x[1], reverse=True)[:max_features]]
         vocab = {t: i for i, t in enumerate(top_terms)}
 
-        n_docs = len(docs_tokens)
+        n_docs = len(docs_features)
         idf: dict[int, float] = {}
         for term, idx in vocab.items():
             idf[idx] = math.log((1 + n_docs) / (1 + df[term])) + 1.0
         return vocab, idf
 
-    def _vectorize(self, toks: list[str], vocab: dict[str, int], idf: dict[int, float]) -> dict[int, float]:
-        counts = Counter(t for t in toks if t in vocab)
+    def _vectorize(self, feats: list[str], vocab: dict[str, int], idf: dict[int, float]) -> dict[int, float]:
+        counts = Counter(t for t in feats if t in vocab)
         if not counts:
             return {}
         total = sum(counts.values())
@@ -72,31 +96,34 @@ class MLPhishingClassifier:
         return vec
 
     def train(self, dataset_path: Path, model_path: Path) -> None:
-        texts: list[str] = []
         labels: list[int] = []
-        docs_tokens: list[list[str]] = []
+        docs_features: list[list[str]] = []
 
         with dataset_path.open("r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 text = row["text"]
                 label = int(row["label"])
-                toks = self._tokens(text)
-                texts.append(text)
+                feats = self._features(text)
                 labels.append(label)
-                docs_tokens.append(toks)
+                docs_features.append(feats)
 
-        vocab, idf = self._build_vocab_and_idf(docs_tokens)
-        vectors = [self._vectorize(toks, vocab, idf) for toks in docs_tokens]
+        vocab, idf = self._build_vocab_and_idf(docs_features)
+        vectors = [self._vectorize(feats, vocab, idf) for feats in docs_features]
 
         weights = defaultdict(float)
         bias = 0.0
-        lr = 0.35
+        lr = 0.22
         reg = 1e-5
-        epochs = 18
+        epochs = 16
 
         idxs = list(range(len(vectors)))
         random.seed(42)
+
+        pos = sum(labels)
+        neg = len(labels) - pos
+        w_pos = len(labels) / (2 * pos) if pos else 1.0
+        w_neg = len(labels) / (2 * neg) if neg else 1.0
 
         for _ in range(epochs):
             random.shuffle(idxs)
@@ -105,13 +132,14 @@ class MLPhishingClassifier:
                 y = labels[i]
                 z = bias + sum(weights[j] * v for j, v in x.items())
                 p = 1.0 / (1.0 + math.exp(-max(-30, min(30, z))))
-                err = p - y
+                class_weight = w_pos if y == 1 else w_neg
+                err = (p - y) * class_weight
 
                 for j, v in x.items():
                     weights[j] -= lr * (err * v + reg * weights[j])
                 bias -= lr * err
 
-            lr *= 0.93
+            lr *= 0.9
 
         model = {
             "model": self.model_name,
@@ -135,7 +163,7 @@ class MLPhishingClassifier:
         weights = {int(k): float(v) for k, v in self.model["weights"].items()}
         bias = float(self.model["bias"])
 
-        x = self._vectorize(self._tokens(text), vocab, idf)
+        x = self._vectorize(self._features(text), vocab, idf)
         z = bias + sum(weights.get(i, 0.0) * v for i, v in x.items())
         prob = 1.0 / (1.0 + math.exp(-max(-30, min(30, z))))
         risk = int(round(prob * 100))
