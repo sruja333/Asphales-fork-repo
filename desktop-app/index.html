@@ -11,6 +11,19 @@
       --accent: #0b5ed7;
       --accent-2: #22c55e;
       --surface: rgba(255, 255, 255, 0.72);
+      --button-surface: #ffffff;
+      --button-border: #b9c2d5;
+    }
+
+    body.dark {
+      --panel-bg-1: #0f172a;
+      --panel-bg-2: #1e293b;
+      --panel-border: #334155;
+      --ink-strong: #e2e8f0;
+      --ink-muted: #94a3b8;
+      --surface: rgba(15, 23, 42, 0.78);
+      --button-surface: #1f2937;
+      --button-border: #475569;
     }
 
     html, body {
@@ -54,13 +67,19 @@
       width: 100%;
       height: 100%;
       box-sizing: border-box;
-      padding: 14px;
+      padding: 18px;
       background:
         radial-gradient(110% 70% at 100% 0%, rgba(11, 94, 215, 0.15) 0%, rgba(11, 94, 215, 0) 60%),
         linear-gradient(155deg, var(--panel-bg-1), var(--panel-bg-2));
       border-radius: 14px;
       border: 1px solid var(--panel-border);
       box-shadow: 0 12px 26px rgba(15, 23, 42, 0.24);
+      position: relative;
+      -webkit-app-region: drag;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+      min-height: 0;
     }
 
     body.expanded #launcher {
@@ -68,14 +87,15 @@
     }
 
     body.expanded #panel {
-      display: block;
+      display: flex;
     }
 
     h3 {
-      margin: 0 0 10px 0;
-      font-size: 16px;
+      margin: 0 0 14px 0;
+      font-size: 22px;
       color: var(--ink-strong);
       letter-spacing: 0.2px;
+      font-weight: 800;
     }
 
     #panel-top {
@@ -85,86 +105,159 @@
     }
 
     #collapse {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 1px solid #b9c2d5;
-      background: #e5eaf3;
-      color: #334155;
+      border: 1px solid var(--button-border);
+      background: var(--button-surface);
+      color: var(--ink-strong);
       font-weight: 700;
       cursor: pointer;
-      line-height: 1;
+      line-height: 1.1;
+      font-size: 20px;
+      -webkit-app-region: no-drag;
+    }
+
+    #controls-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
     #toggle {
-      padding: 8px 16px;
+      padding: 11px 22px;
       border-radius: 20px;
       border: none;
       cursor: pointer;
       background: red;
       color: white;
       font-weight: 700;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.35px;
+      font-size: 20px;
       box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+      -webkit-app-region: no-drag;
+    }
+
+    #speak-summary {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      border: 1px solid var(--button-border);
+      background: var(--button-surface);
+      color: #0b3a82;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+      -webkit-app-region: no-drag;
+    }
+
+    #theme-toggle {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--button-border);
+      background: var(--button-surface);
+      color: var(--ink-strong);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+      -webkit-app-region: no-drag;
     }
 
     #language-row {
-      margin-top: 10px;
+      margin-top: 2px;
       display: flex;
       align-items: center;
       gap: 8px;
       color: var(--ink-strong);
-      font-size: 12px;
+      font-size: 15px;
       font-weight: 600;
     }
 
     #language-select {
       flex: 1;
       min-width: 0;
-      padding: 6px 8px;
+      padding: 10px 12px;
       border-radius: 8px;
       border: 1px solid rgba(148, 163, 184, 0.7);
       background: rgba(255, 255, 255, 0.86);
       color: var(--ink-strong);
-      font-size: 12px;
+      font-size: 16px;
       font-weight: 600;
       outline: none;
+      -webkit-app-region: no-drag;
+    }
+
+    body.dark #language-select {
+      background: #0b1220;
+      color: #ffffff;
+      border-color: #64748b;
+    }
+
+    body.dark #language-select option {
+      background: #0b1220;
+      color: #ffffff;
     }
 
     #result {
-      margin-top: 12px;
-      font-size: 14px;
-      min-height: 40px;
-      max-height: 112px;
+      margin-top: 2px;
+      font-size: 18px;
+      min-height: 0;
+      max-height: none;
+      flex: 1 1 0;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px;
+      padding: 11px;
       padding-right: 6px;
-      line-height: 1.35;
+      padding-bottom: 36px;
+      line-height: 1.55;
       word-break: break-word;
+      overflow-wrap: anywhere;
       border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.42);
       background: var(--surface);
       backdrop-filter: blur(1px);
       color: var(--ink-strong);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      -webkit-app-region: no-drag;
+      scroll-padding-bottom: 28px;
     }
 
     #result strong {
       color: #0b3a82;
     }
 
+    body.dark #result strong {
+      color: #93c5fd;
+    }
+
     #result > div {
-      padding: 2px 0;
+      padding: 5px 0;
+    }
+
+    #result > div:last-child {
+      margin-bottom: 14px;
     }
 
     #hint {
-      font-size: 12px;
-      margin: 8px 0 0;
+      font-size: 14px;
+      margin: 0;
       color: var(--ink-muted);
       border-top: 1px dashed rgba(148, 163, 184, 0.55);
       padding-top: 8px;
+      -webkit-app-region: no-drag;
     }
+
+    button:focus-visible,
+    select:focus-visible {
+      outline: 3px solid #1d4ed8;
+      outline-offset: 2px;
+    }
+
   </style>
 </head>
 <body>
@@ -178,7 +271,11 @@
     <button id="collapse" aria-label="Minimize">-</button>
   </div>
 
-  <button id="toggle">OFF</button>
+  <div id="controls-row">
+    <button id="toggle">OFF</button>
+    <button id="speak-summary" aria-label="Speak summary" title="Speak summary">&#128266;</button>
+    <button id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">&#127769;</button>
+  </div>
 
   <div id="language-row">
     <label for="language-select">Display Language</label>
@@ -186,10 +283,10 @@
   </div>
 
   <div id="result"></div>
-
   <p id="hint">Press Ctrl + Shift + X after selecting text.</p>
 </div>
 
 <script src="renderer.js"></script>
 </body>
 </html>
+
