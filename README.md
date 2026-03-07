@@ -1,117 +1,118 @@
-🛡️ SurakshaAI
-Multilingual Phishing Protection for India
+🛡️ SurakshaAI – Multilingual Phishing Protection for India
 
-Detecting phishing attacks in Hindi, Tamil, Telugu, Bengali and other Indian languages — including code-mixed text like Hinglish — using a hybrid Machine Learning + Pattern Analysis system.
+SurakshaAI is a multilingual phishing detection system designed specifically for India’s diverse language ecosystem. It detects phishing attempts in Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, and code-mixed languages like Hinglish using a hybrid Machine Learning + Pattern Analysis approach.
 
 🚨 The Problem
 
-India is facing a surge in vernacular phishing attacks targeting users who communicate in regional languages.
+India is experiencing a massive rise in vernacular phishing attacks targeting users in regional languages.
 
-🇮🇳 400M+ Indian language users are exposed to phishing messages.
+400M+ Indian language speakers are vulnerable to phishing messages.
 
-Most cybersecurity tools are English-centric.
+Most cybersecurity tools are built for English.
 
-Phishing messages in Hindi, Tamil, Telugu, Bengali, and mixed scripts bypass existing filters.
+Phishing messages written in regional scripts bypass traditional filters.
 
-Why Current Systems Fail
+Why Current Protections Fail
 
-Telecom SMS Filters
+1. Telecom SMS Filters
 
-Built around English keyword blacklists
+Rely on English keyword lists such as OTP, verify, bank
 
-Miss messages like:
-तुरंत OTP भेजें (Send OTP immediately)
+Miss vernacular messages like:
 
-Email & Browser Security
+तुरंत OTP भेजें
+(Send OTP immediately)
 
-Focus only on URL reputation and domain blacklists
+2. Email & Browser Security
+
+Focus mainly on URL reputation and domain blacklists
 
 Ignore message content written in Indian scripts
 
-Mobile OS Protection
+3. Mobile OS Protection
 
-No native models for Devanagari, Tamil, or Telugu
+Android and iOS warnings do not support Indian language models
 
-Regional language users receive little protection
+No detection for Devanagari, Tamil, or Telugu scripts
 
-➡️ Result: A massive cybersecurity gap in India's multilingual digital ecosystem.
+➡️ Result: A huge cybersecurity gap where phishing in regional languages goes undetected.
 
 💡 Our Solution
 
-SurakshaAI is a multilingual phishing detection system designed specifically for India.
+SurakshaAI is a vernacular-first phishing detection platform designed for India's multilingual digital ecosystem.
 
-It combines:
+The system combines:
 
-Machine Learning models
+Machine Learning classification
 
-Script-aware pattern detection
+Unicode script detection
+
+Pattern-based phishing analysis
 
 Contextual risk scoring
 
 Real-time browser scanning
 
-🌏 Languages Supported
-Full Detection Support
-Language	Script	Coverage
-Hindi	Devanagari	60+ phishing keywords
-Tamil	Tamil Script	40+ keywords
-Telugu	Telugu Script	30+ keywords
-Bengali	Bengali Script	30+ keywords
-Marathi	Devanagari	30+ keywords
-Gujarati	Gujarati Script	30+ keywords
-Code-Mixed Language Detection
+🌏 Supported Languages
+Full Detection Coverage
+Language	Script	Keywords
+Hindi	Devanagari	60+
+Tamil	Tamil Script	40+
+Telugu	Telugu Script	30+
+Bengali	Bengali Script	30+
+Marathi	Devanagari	30+
+Gujarati	Gujarati Script	30+
+Code-Mixed Detection
 
-SurakshaAI detects mixed-language messages, which are extremely common in India.
+SurakshaAI can detect phishing messages that mix English with regional languages, which is common in India.
 
-Examples:
+Example:
 
-आपका account verify करें
-OTP भेजें immediately
+आपका account verify करें - OTP भेजें immediately
 
-Supports:
+Supported patterns include:
 
 Hinglish
 
-Tamilglish
+Tamil + English
 
-Telugu-English combinations
+Telugu + English
 
-Mixed script patterns
+Mixed script communication
 
 ⚙️ Technical Architecture
 
-SurakshaAI uses a hybrid detection engine.
+SurakshaAI uses a hybrid detection engine composed of multiple layers.
 
 1️⃣ Machine Learning Classifier
 
 TF-IDF + Logistic Regression
 
-Trained on 7,500+ multilingual samples
+Trained on 7,500+ multilingual phishing samples
 
-85% accuracy across Indian languages
+85% detection accuracy
 
 Sub-1ms inference time
 
-Special features:
+Additional features:
 
-Script-aware thresholding
+Script-aware thresholds
 
-Lower detection threshold for vernacular languages
+Lower thresholds for vernacular languages
 
 2️⃣ Vernacular Pattern Analyzer
 
-Uses Unicode script detection:
+Uses Unicode-based script detection to identify regional languages.
 
 Script	Unicode Range
-Devanagari	U+0900–U+097F
-Tamil	U+0B80–U+0BFF
-Telugu	U+0C00–U+0C7F
+Devanagari	U+0900 – U+097F
+Tamil	U+0B80 – U+0BFF
+Telugu	U+0C00 – U+0C7F
+Bengali	U+0980 – U+09FF
 
-Instead of simple keyword matching, SurakshaAI:
+The analyzer extracts complete sentences (≥60 characters) instead of matching single keywords.
 
-Extracts full sentences (≥60 characters)
-
-Detects phishing patterns such as:
+Example Phishing Indicators
 
 Credential Requests
 
@@ -132,17 +133,17 @@ Account Threats
 தடை
 3️⃣ Contextual Risk Scoring
 
-SurakshaAI assigns a risk score to each message.
+Each message is assigned a risk score.
 
 Risk Level	Score
-Low	0–30%
-Medium	30–60%
-High	60–85%
-Critical	85–100%
+Low	0 – 30%
+Medium	30 – 60%
+High	60 – 85%
+Critical	85 – 100%
 
 Threat categories include:
 
-Credential requests
+Credential phishing
 
 Urgency manipulation
 
@@ -152,59 +153,47 @@ Impersonation attacks
 
 Fear tactics
 
-Users receive bilingual explanations in Hinglish.
+4️⃣ Real-Time Protection
 
-Example:
+SurakshaAI includes a Chrome Extension that scans webpages in real time.
 
-"Yeh message aapse OTP maang raha hai. Koi bhi asli bank OTP nahi maangta."
+Features:
 
-🧠 Key Features
-🇮🇳 Vernacular-First Detection
+Highlights phishing phrases
 
-Works directly on Indian scripts, not translated English.
+Color-coded severity levels
 
-🔀 Code-Mixed Language Support
+Clickable explanations
 
-Detects messages mixing English + Indian languages.
+Visual Indicators
 
-Example:
+🔴 Red → Critical threat
 
-आपका account verify करें - OTP भेजें immediately
-📖 Explainable AI
+🟡 Yellow → High risk
 
-Users see clear explanations of why a message is dangerous.
+🟠 Orange → Medium risk
 
-🌐 Real-Time Browser Integration
+5️⃣ Privacy-First Design
 
-Chrome extension highlights phishing phrases directly on webpages.
-
-Color-coded alerts:
-
-🔴 Critical
-
-🟡 High
-
-🟠 Medium
-
-🔒 Privacy-First Design
+SurakshaAI prioritizes user privacy.
 
 No persistent storage
 
-No message logging
+Messages analyzed only in RAM
 
-Messages analyzed in RAM only
+No message logging
 
 Offline detection supported
 
 🖥️ Current Prototype
 
-Built during a 56-hour national hackathon, SurakshaAI includes:
+Built during a 56-hour national hackathon, SurakshaAI currently includes:
 
 Chrome Extension
 
 Real-time webpage scanning
 
-Highlights phishing text
+Highlights phishing phrases
 
 Works on Gmail, WhatsApp Web, banking sites
 
@@ -212,18 +201,18 @@ Manifest V3 compliant
 
 Desktop Application
 
-Standalone application that:
+Standalone phishing scanner that allows users to:
 
-Scans pasted messages
+Paste suspicious messages
 
-Supports file uploads
+Upload text files
 
-Works offline
+Scan messages offline
 
-Hybrid Detection System
+Hybrid Detection Engine
 Layer	Technology
-Primary	TF-IDF + Logistic Regression
-Secondary	Vernacular pattern detection
+Primary	TF-IDF Logistic Regression
+Secondary	Vernacular pattern analyzer
 Optional	LLM analysis (Llama-3.1)
 Fallback	Client-side regex detection
 📊 Validation Results
@@ -234,31 +223,31 @@ Code-Mixed Accuracy	100%
 False Positive Rate	30%
 Inference Speed	0.2ms avg
 
-System can process 5,000+ messages per second.
+The system can process 5000+ messages per second.
 
-🚀 Deployment Potential
+🚀 Deployment Opportunities
 
-SurakshaAI can integrate across multiple layers of India's digital infrastructure.
+SurakshaAI can integrate into multiple layers of India’s digital infrastructure.
 
-📱 Telecom SMS Filtering
+Telecom SMS Filtering
 
-Carrier-level integration
+Potential integration with telecom providers.
 
-Block phishing before delivery
+Possible partners:
 
-Potential partners: Jio, Airtel, Vi
+Jio
 
-💳 Fintech Fraud Protection API
+Airtel
 
-Integration with:
+Vodafone Idea
 
-UPI apps
+Goal:
 
-Banking apps
+Detect phishing before SMS delivery
 
-Payment platforms
+Fintech Fraud Protection API
 
-Potential clients:
+Possible integration with payment platforms:
 
 Paytm
 
@@ -270,59 +259,76 @@ SBI
 
 HDFC Bank
 
-🏢 Enterprise Email Security
+Use cases:
 
-Deployable as:
+UPI fraud detection
+
+Message scanning
+
+Banking app protection
+
+Enterprise Email Security
+
+Enterprise deployment options:
 
 Email gateway plugin
 
 Docker container
 
-Cloud or on-premises
+Cloud or on-premise deployment
 
-📲 Mobile OS Protection
+Mobile OS Message Filtering
 
-Future integration with:
+Future plans include:
 
-Android SMS filtering
+Android SMS filtering service
 
-iOS Message Filter Extensions
+iOS Message Filter extension
 
 📈 Market Opportunity
-Message Volume in India
+Scale of Messaging in India
 Metric	Value
 SMS per year	150B+
-Phishing attempts	7.5B
-Vernacular phishing	~4.5B
+Estimated phishing attempts	7.5B
+Vernacular phishing messages	4.5B
 Unserved Market
 
 400M+ regional language users
 
-Elderly users frequently targeted
+High targeting of elderly users
 
-Rural users lack cybersecurity protection
+Rural population with limited cybersecurity tools
 
-🏆 What Makes SurakshaAI Different
+🏆 What Makes SurakshaAI Unique
 
-✅ Built for Indian languages first
-✅ Handles code-mixed communication
-✅ Provides explainable AI warnings
-✅ Works offline
-✅ Designed for telecom-scale deployment
+Vernacular-first detection
+Built specifically for Indian scripts rather than translated English models.
+
+Code-mixed language support
+Handles real-world communication patterns like Hinglish.
+
+Explainable AI warnings
+Provides easy-to-understand explanations for non-technical users.
+
+Offline detection capability
+Ensures protection even without internet connectivity.
+
+Telecom-scale architecture
+Designed for high throughput and low latency.
 
 🔬 Future Work
 
-We are currently exploring:
+Planned improvements include:
+
+Expanding multilingual phishing datasets
 
 Training IndicBERT / mBERT models
 
-Expanding phishing dataset
+Telecom-level deployment
 
-Telecom carrier integrations
+Enterprise API scaling
 
-Enterprise API deployment
-
-Federated learning for privacy-preserving training
+Privacy-preserving federated learning
 
 🤝 Contributions & Feedback
 
@@ -347,12 +353,6 @@ Chrome Extension
 Desktop Application
 
 REST API Sandbox
-
-📬 Contact
-
-Team: SurakshaAI
-Location: India
-Stage: Hackathon Finalist → Exploring commercialization
 
 For:
 
